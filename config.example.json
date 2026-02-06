@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "imessage": {
+      "command": "node",
+      "args": ["/absolute/path/to/claude-imessage-mcp/index.js"]
+    }
+  }
+}
