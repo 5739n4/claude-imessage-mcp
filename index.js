@@ -274,7 +274,7 @@ class ImessageMCPServer {
         timeout: 10000,
       });
 
-      const chats = JSON.parse(output);
+      const chats = this.parseJsonOutput(output);
       const formatted = chats.map((chat, index) => {
         return `${index + 1}. Chat ID: ${chat.chat_id || 'N/A'}
    Participants: ${chat.display_name || chat.participants?.join(', ') || 'Unknown'}
@@ -304,7 +304,7 @@ class ImessageMCPServer {
       }
 
       const output = execSync(cmd, { encoding: 'utf-8', timeout: 10000 });
-      const messages = JSON.parse(output);
+      const messages = this.parseJsonOutput(output);
 
       const formatted = messages.map((msg, index) => {
         const from = msg.is_from_me ? 'Me' : (msg.sender || msg.handle || 'Unknown');
@@ -323,6 +323,21 @@ class ImessageMCPServer {
       };
     } catch (error) {
       throw new Error(`Failed to fetch message history: ${error.message}`);
+    }
+  }
+
+  parseJsonOutput(output) {
+    const trimmed = output.trim();
+    if (!trimmed) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch (error) {
+      const lines = trimmed.split('\n').filter(Boolean);
+      return lines.map((line) => JSON.parse(line));
     }
   }
 
