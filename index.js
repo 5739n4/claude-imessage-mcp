@@ -7,7 +7,7 @@ import { spawn, execSync } from 'child_process';
 import { EventEmitter } from 'events';
 
 /**
- * iMessage Watcher - 监听新消息
+ * iMessage Watcher - listens for new messages
  */
 class ImsgWatcher extends EventEmitter {
   constructor(chatId = null) {
@@ -84,7 +84,7 @@ class ImsgWatcher extends EventEmitter {
 }
 
 /**
- * 主 MCP Server
+ * Main MCP Server
  */
 class ImessageMCPServer {
   constructor() {
@@ -116,26 +116,26 @@ class ImessageMCPServer {
   }
 
   setupToolHandlers() {
-    // 列出可用工具
+    // List available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
         {
           name: 'send_imessage',
-          description: '发送 iMessage 消息到指定联系人。支持电话号码或邮箱地址。',
+          description: 'Send an iMessage to a contact. Supports phone numbers or email addresses.',
           inputSchema: {
             type: 'object',
             properties: {
               to: {
                 type: 'string',
-                description: '收件人电话号码（如 +86xxxxxxxxxx）或邮箱地址',
+                description: 'Recipient phone number (e.g. +15551234567) or email address',
               },
               text: {
                 type: 'string',
-                description: '消息内容',
+                description: 'Message text',
               },
               file: {
                 type: 'string',
-                description: '可选：附件文件路径',
+                description: 'Optional attachment file path',
               },
             },
             required: ['to', 'text'],
@@ -143,13 +143,13 @@ class ImessageMCPServer {
         },
         {
           name: 'list_imessage_chats',
-          description: '列出最近的 iMessage 聊天列表，包含聊天ID、参与者等信息。',
+          description: 'List recent iMessage chats with chat IDs and participants.',
           inputSchema: {
             type: 'object',
             properties: {
               limit: {
                 type: 'number',
-                description: '返回数量限制（默认20）',
+                description: 'Max results to return (default 20)',
                 default: 20,
               },
             },
@@ -157,22 +157,22 @@ class ImessageMCPServer {
         },
         {
           name: 'get_imessage_history',
-          description: '获取指定聊天的历史消息记录。',
+          description: 'Get message history for a chat.',
           inputSchema: {
             type: 'object',
             properties: {
               chat_id: {
                 type: 'string',
-                description: '聊天ID（从 list_imessage_chats 获取）',
+                description: 'Chat ID (from list_imessage_chats)',
               },
               limit: {
                 type: 'number',
-                description: '返回消息数量（默认50）',
+                description: 'Number of messages to return (default 50)',
                 default: 50,
               },
               attachments: {
                 type: 'boolean',
-                description: '是否包含附件信息（默认false）',
+                description: 'Include attachment metadata (default false)',
                 default: false,
               },
             },
@@ -181,20 +181,20 @@ class ImessageMCPServer {
         },
         {
           name: 'watch_imessage',
-          description: '开始监听新的 iMessage 消息。一旦启动，将持续监听并报告新消息。',
+          description: 'Start watching for new iMessage messages and continue until stopped.',
           inputSchema: {
             type: 'object',
             properties: {
               chat_id: {
                 type: 'string',
-                description: '可选：仅监听特定聊天的消息',
+                description: 'Optional: watch a single chat by ID',
               },
             },
           },
         },
         {
           name: 'stop_watch_imessage',
-          description: '停止监听 iMessage 消息。',
+          description: 'Stop watching iMessage messages.',
           inputSchema: {
             type: 'object',
             properties: {},
@@ -203,7 +203,7 @@ class ImessageMCPServer {
       ],
     }));
 
-    // 处理工具调用
+    // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
 
@@ -232,7 +232,7 @@ class ImessageMCPServer {
           content: [
             {
               type: 'text',
-              text: `错误: ${error.message}`,
+              text: `Error: ${error.message}`,
             },
           ],
           isError: true,
@@ -256,12 +256,12 @@ class ImessageMCPServer {
         content: [
           {
             type: 'text',
-            text: `✓ 消息已发送到 ${to}\n${output}`,
+            text: `✓ Message sent to ${to}\n${output}`,
           },
         ],
       };
     } catch (error) {
-      throw new Error(`发送消息失败: ${error.message}`);
+      throw new Error(`Failed to send message: ${error.message}`);
     }
   }
 
@@ -277,20 +277,20 @@ class ImessageMCPServer {
       const chats = JSON.parse(output);
       const formatted = chats.map((chat, index) => {
         return `${index + 1}. Chat ID: ${chat.chat_id || 'N/A'}
-   参与者: ${chat.display_name || chat.participants?.join(', ') || 'Unknown'}
-   最后消息: ${chat.last_message_date || 'N/A'}`;
+   Participants: ${chat.display_name || chat.participants?.join(', ') || 'Unknown'}
+   Last message: ${chat.last_message_date || 'N/A'}`;
       }).join('\n\n');
 
       return {
         content: [
           {
             type: 'text',
-            text: `找到 ${chats.length} 个聊天:\n\n${formatted}\n\n原始JSON数据:\n${output}`,
+            text: `Found ${chats.length} chats:\n\n${formatted}\n\nRaw JSON:\n${output}`,
           },
         ],
       };
     } catch (error) {
-      throw new Error(`获取聊天列表失败: ${error.message}`);
+      throw new Error(`Failed to fetch chat list: ${error.message}`);
     }
   }
 
@@ -307,8 +307,8 @@ class ImessageMCPServer {
       const messages = JSON.parse(output);
 
       const formatted = messages.map((msg, index) => {
-        const from = msg.is_from_me ? '我' : (msg.sender || msg.handle || 'Unknown');
-        const text = msg.text || '[无文本]';
+        const from = msg.is_from_me ? 'Me' : (msg.sender || msg.handle || 'Unknown');
+        const text = msg.text || '[No text]';
         const date = msg.date || 'N/A';
         return `${index + 1}. [${date}] ${from}: ${text}`;
       }).join('\n');
@@ -317,12 +317,12 @@ class ImessageMCPServer {
         content: [
           {
             type: 'text',
-            text: `聊天历史 (${messages.length} 条消息):\n\n${formatted}\n\n原始JSON数据:\n${output}`,
+            text: `Chat history (${messages.length} messages):\n\n${formatted}\n\nRaw JSON:\n${output}`,
           },
         ],
       };
     } catch (error) {
-      throw new Error(`获取历史消息失败: ${error.message}`);
+      throw new Error(`Failed to fetch message history: ${error.message}`);
     }
   }
 
@@ -332,7 +332,7 @@ class ImessageMCPServer {
         content: [
           {
             type: 'text',
-            text: '⚠️ Watcher已在运行中',
+            text: '⚠️ Watcher is already running',
           },
         ],
       };
@@ -342,9 +342,9 @@ class ImessageMCPServer {
       this.watcher = new ImsgWatcher(args.chat_id);
 
       this.watcher.on('message', (msg) => {
-        const from = msg.is_from_me ? '我' : (msg.sender || msg.handle || 'Unknown');
-        const text = msg.text || '[无文本]';
-        console.error(`\n📨 新消息 [${msg.chat_id}] ${from}: ${text}`);
+        const from = msg.is_from_me ? 'Me' : (msg.sender || msg.handle || 'Unknown');
+        const text = msg.text || '[No text]';
+        console.error(`\n📨 New message [${msg.chat_id}] ${from}: ${text}`);
       });
 
       this.watcher.on('error', (err) => {
@@ -361,12 +361,12 @@ class ImessageMCPServer {
         content: [
           {
             type: 'text',
-            text: `✓ 开始监听 iMessage 消息${args.chat_id ? ` (Chat ID: ${args.chat_id})` : '（所有聊天）'}\n\n新消息将实时显示在控制台输出中。使用 stop_watch_imessage 停止监听。`,
+            text: `✓ Started watching iMessage messages${args.chat_id ? ` (Chat ID: ${args.chat_id})` : ' (all chats)'}\n\nNew messages will stream to stderr. Use stop_watch_imessage to stop.`,
           },
         ],
       };
     } catch (error) {
-      throw new Error(`启动监听失败: ${error.message}`);
+      throw new Error(`Failed to start watch: ${error.message}`);
     }
   }
 
@@ -376,7 +376,7 @@ class ImessageMCPServer {
         content: [
           {
             type: 'text',
-            text: '⚠️ 没有正在运行的 watcher',
+            text: '⚠️ No watcher is running',
           },
         ],
       };
@@ -389,7 +389,7 @@ class ImessageMCPServer {
       content: [
         {
           type: 'text',
-          text: '✓ 已停止监听 iMessage 消息',
+          text: '✓ Stopped watching iMessage messages',
         },
       ],
     };
@@ -398,20 +398,20 @@ class ImessageMCPServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('🦞 Claude iMessage MCP Server 已启动');
+    console.error('🦞 Claude iMessage MCP Server started');
   }
 }
 
-// 启动服务器
+// Start server
 const server = new ImessageMCPServer();
 server.run().catch((error) => {
   console.error('Server error:', error);
   process.exit(1);
 });
 
-// 优雅退出
+// Graceful shutdown
 process.on('SIGINT', () => {
-  console.error('\n正在关闭服务器...');
+  console.error('\nShutting down server...');
   if (server.watcher) {
     server.watcher.stop();
   }
