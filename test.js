@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * 简单的测试脚本，用于验证 imsg 命令是否可用
+ * Simple test script to verify the imsg CLI is available
  */
 
 import { execSync } from 'child_process';
 
 console.log('🧪 Testing iMessage MCP Server Setup\n');
 
-// 检查 imsg 是否安装
+// Check if imsg is installed
 console.log('1. Checking if imsg is installed...');
 try {
   const imsgPath = execSync('which imsg', { encoding: 'utf-8' }).trim();
@@ -19,7 +19,7 @@ try {
   process.exit(1);
 }
 
-// 检查 imsg 版本
+// Check imsg version
 console.log('2. Checking imsg version...');
 try {
   const version = execSync('imsg --version', { encoding: 'utf-8' }).trim();
@@ -28,18 +28,20 @@ try {
   console.error('   ✗ Failed to get version\n');
 }
 
-// 测试列出聊天
+// Test listing chats
 console.log('3. Testing list chats...');
 try {
-  const chats = execSync('imsg chats --limit 3 --json', { encoding: 'utf-8' });
-  const chatList = JSON.parse(chats);
+  const chats = execSync('imsg chats --limit 3 --json', { encoding: 'utf-8' }).trim();
+  const lines = chats ? chats.split('\n') : [];
+  const chatList = lines.map(line => JSON.parse(line));
   console.log(`   ✓ Found ${chatList.length} recent chats\n`);
 } catch (err) {
   console.error('   ✗ Failed to list chats');
-  console.error('   Make sure you have granted Full Disk Access to your terminal\n');
+  console.error('   Make sure you have granted Full Disk Access to your terminal');
+  console.error('   and that imsg returns valid JSON lines (one per chat)\n');
 }
 
-// 检查权限提示
+// Required permissions reminder
 console.log('4. Required Permissions:');
 console.log('   - Full Disk Access: Required to read ~/Library/Messages/chat.db');
 console.log('   - Automation: Required to send messages via Messages.app');
