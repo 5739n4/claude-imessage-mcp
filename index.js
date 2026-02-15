@@ -276,9 +276,14 @@ class ImessageMCPServer {
 
       const chats = this.parseJsonOutput(output);
       const formatted = chats.map((chat, index) => {
-        return `${index + 1}. Chat ID: ${chat.chat_id || 'N/A'}
-   Participants: ${chat.display_name || chat.participants?.join(', ') || 'Unknown'}
-   Last message: ${chat.last_message_date || 'N/A'}`;
+        const participants = chat.name || chat.display_name || chat.participants?.join(', ') || chat.identifier || 'Unknown';
+        const lastMessageAt = chat.last_message_at || chat.last_message_date || 'N/A';
+        const chatId = chat.chat_id ?? chat.id ?? 'N/A';
+        const service = chat.service || 'N/A';
+        return `${index + 1}. Chat ID: ${chatId}
+   Participants: ${participants}
+   Service: ${service}
+   Last message: ${lastMessageAt}`;
       }).join('\n\n');
 
       return {
@@ -307,9 +312,9 @@ class ImessageMCPServer {
       const messages = this.parseJsonOutput(output);
 
       const formatted = messages.map((msg, index) => {
-        const from = msg.is_from_me ? 'Me' : (msg.sender || msg.handle || 'Unknown');
+        const from = msg.is_from_me ? 'Me' : (msg.sender || msg.handle || msg.identifier || 'Unknown');
         const text = msg.text || '[No text]';
-        const date = msg.date || 'N/A';
+        const date = msg.created_at || msg.date || 'N/A';
         return `${index + 1}. [${date}] ${from}: ${text}`;
       }).join('\n');
 
